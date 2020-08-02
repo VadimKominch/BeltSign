@@ -36,9 +36,18 @@ def convertEndian(number):
     [a,b,c,d] = [d,c,b,a]
     return (a << 24) | (b << 16) | (c << 8) | d
 
+def splitInput(input):
+    array = [int(input[8*i:8+8*i],16) for i in range(0,4)]
+    return array
+
 def main():
     shift(3,5)
     print(hex(replace(0xA2)))
     print(hex(convertEndian(0xB194BAC8)))
+    [a,b,c,d] = splitInput("B194BAC80A08F53B366D008E584A5DE4")
+    print(hex(a))
+    print(hex(b))
+    print(hex(c))
+    print(hex(d))
 
 main()
