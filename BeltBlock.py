@@ -1,32 +1,35 @@
-class BeltBlock:
-	def encode(input,key):
-		block_size = 32
-		count = len(input)/block_size
-		[a,b,c,d] = [int(input[i:i+block_size-1],2) for i in range(0,len(input),block_size)]
-		print(b)
-		key_count = len(key)/block_size
-		[t1,t2,t3,t4,t5,t6,t7,t8] = [input[i:i+block_size-1] for i in range(0,len(key),block_size)]
-		print(BeltBlock.__rotate__("42424242",7))
-		for i in range(8):
-			b = b ^ 1
-			# c = int(c,2) ^ 2
-			# a = int(a,2) ^ 3
-			# e = int(b,2) ^ 4
-			[a,b] = [b,a]
-			[c,d] = [d,c]
-			[b,c] = [c,b]
+import binascii
 
-	def decode(input,key):
-		pass
-		
+class BeltBlock:
+
+    def decode(input,key):
+        pass
+
+    def encode(input,key):
+        block_size = 32
+        count = len(input)/block_size
+        [a,b,c,d] = [int(input[i:i+block_size-1],2) for i in range(0,len(input),block_size)]
+        print("Blocks")
+        print(a)
+        print(b)
+        print(c)
+        print(d)
+        key_count = len(key)/block_size
+        [t1,t2,t3,t4,t5,t6,t7,t8] = [input[i:i+block_size-1] for i in range(0,len(key),block_size)]
+        x = BeltBlock.__rotate__("12345678",7)
+        key1 = list(binascii.unhexlify('E9DEE72C8F0C0FA62DDB49F46F73964706075316ED247A3739CBA38303A98BF6'))
+        print(key1)
+        return x
+
+
 #
 # inner function for byte replacement
 #
 #
-	def __replace__(byte):
-		x = byte[0] 
-		y = byte[1]
-		array = [["B1","94","BA","C8","0A","08","F5","3B","36","6D","00","8E","58","4A","5D","E4"],
+    def __replace__(byte):
+        x = byte[0]
+        y = byte[1]
+        array = [["B1","94","BA","C8","0A","08","F5","3B","36","6D","00","8E","58","4A","5D","E4"],
 				 ["85","04","FA","9D","1B","B6","C7","AC","25","2E","72","C2","02","FD","CE","0D"],
 				 ["5B","E3","D6","12","17","B9","61","81","FE","67","86","AD","71","6B","89","0B"],
 				 ["5C","B0","C0","FF","33","C3","56","B8","35","C4","05","AE","D8","E0","7F","99"],
@@ -42,17 +45,21 @@ class BeltBlock:
 				 ["7E","CD","A4","D0","15","44","AF","8C","A5","84","50","BF","66","D2","E8","8A"],
 				 ["A2","D7","46","52","42","A8","DF","B3","69","74","C5","51","EB","23","29","21"],
  				 ["D4","EF","D9","B4","3A","62","28","75","91","14","10","EA","77","6C","DA","1D"]]
-		return array[int(x,16)][int(y,16)]
-		
-	def __rotate__(word,shift):
-		print(word)
-		block_size = 2
-		count = len(word)/block_size
-		[a,b,c,d] = [word[i:i+block_size] for i in range(0,len(word),block_size)]
-		a = BeltBlock.__replace__(a)
-		b = BeltBlock.__replace__(b)
-		c = BeltBlock.__replace__(c)
-		d = BeltBlock.__replace__(d)
-		replaced = a + b + c + d #cyclic shift of number
-		return replaced
+        return array[int(x,16)][int(y,16)]
+
+    def __rotate__(word,shift):
+        print(word)
+        block_size = 2
+        count = len(word)/block_size
+        [a,b,c,d] = [word[i:i+block_size] for i in range(0,len(word),block_size)]
+        a = BeltBlock.__replace__(a)
+        b = BeltBlock.__replace__(b)
+        c = BeltBlock.__replace__(c)
+        d = BeltBlock.__replace__(d)
+        replaced = a + b + c + d
+        arr = list(replaced)
+        print(arr)
+        arr = arr[1:len(arr)-shift] + arr[len(arr)-shift+1:len(arr)]
+        print(arr)
+        return replaced
 		

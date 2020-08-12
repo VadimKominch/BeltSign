@@ -5,6 +5,14 @@ def shift(value,number):
     b = (value << number | value >> (digits - number)) & (math.floor(math.pow(2,digits))-1)
     print(b)
 
+def addMod32(number1,number2):
+    mask = 2**32-1
+    return (number1+number2) & mask
+
+def subMod32(number1,number2):
+    mask = 2**32-1
+    return (number1-number2) & mask
+
 def replace(number):
     array = [[0xB1,0x94,0xBA,0xC8,0x0A,0x08,0xF5,0x3B,0x36,0x6D,0x00,0x8E,0x58,0x4A,0x5D,0xE4],
             [0x85,0x04,0xFA,0x9D,0x1B,0xB6,0xC7,0xAC,0x25,0x2E,0x72,0xC2,0x02,0xFD,0xCE,0x0D],
@@ -36,18 +44,34 @@ def convertEndian(number):
     [a,b,c,d] = [d,c,b,a]
     return (a << 24) | (b << 16) | (c << 8) | d
 
-def splitInput(input):
-    array = [int(input[8*i:8+8*i],16) for i in range(0,4)]
+
+def splitHexInput(input,length):
+    mask = 2**32-1
+    array = [(input >> 32*i) & mask  for i in range(length-1,-1,-1)]
     return array
 
-def main():
-    shift(3,5)
-    print(hex(replace(0xA2)))
-    print(hex(convertEndian(0xB194BAC8)))
-    [a,b,c,d] = splitInput("B194BAC80A08F53B366D008E584A5DE4")
-    print(hex(a))
-    print(hex(b))
-    print(hex(c))
-    print(hex(d))
+def beltBlock(input,key):
+    inputs = splitHexInput(input,4)
+    keys = splitHexInput(key,8)
+    [a,b,c,d] = [convertEndian(el)  for el in inputs]
+    ke_arr = [convertEndian(el)  for el in keys]
+    for i in range(1,9):
+        b = b ^ Gtransform(addMod32(a,ke_arr[1]),5) 
+        c = c ^ Gtransform(addMod32(d,ke_arr[2]),21)
+        a = a ^ Gtransform(addMod32(b,ke_arr[3]),13)
+        e = Gtransform(number,13) + i
+        b = addMod32(b,e)
+        c = subMod32(c,e)
+        d = d + 0
+        b = b ^ 0
+        c = c ^ 0
+        [a,b] = [b,a]
+        [c,d] = [d,c]
+        [b,c] = [c,b]
+    return 0
 
+def main():
+    print(hex(subMod32(1,4)))
+    arr = splitHexInput(0xB194BAC80A08F53B366D008E584A5DE4,4)
+    #beltBlock(0xB194BAC80A08F53B366D008E584A5DE4,0xB194BAC80A08F53B366D008E584A5DE4)
 main()
