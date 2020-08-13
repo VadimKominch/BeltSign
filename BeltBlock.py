@@ -1,65 +1,104 @@
-import binascii
+import math
 
-class BeltBlock:
+def shift(value,number):
+    digits = 32
+    return (value << number | value >> (digits - number)) & (math.floor(math.pow(2,digits))-1)
+    
 
-    def decode(input,key):
-        pass
+def addMod32(number1,number2):
+    mask = 2**32-1
+    return (number1+number2) & mask
 
-    def encode(input,key):
-        block_size = 32
-        count = len(input)/block_size
-        [a,b,c,d] = [int(input[i:i+block_size-1],2) for i in range(0,len(input),block_size)]
-        print("Blocks")
-        print(a)
-        print(b)
-        print(c)
-        print(d)
-        key_count = len(key)/block_size
-        [t1,t2,t3,t4,t5,t6,t7,t8] = [input[i:i+block_size-1] for i in range(0,len(key),block_size)]
-        x = BeltBlock.__rotate__("12345678",7)
-        key1 = list(binascii.unhexlify('E9DEE72C8F0C0FA62DDB49F46F73964706075316ED247A3739CBA38303A98BF6'))
-        print(key1)
-        return x
+def subMod32(number1,number2):
+    mask = 2**32-1
+    return (number1-number2) & mask
+
+def replace(number):
+    array = [[0xB1,0x94,0xBA,0xC8,0x0A,0x08,0xF5,0x3B,0x36,0x6D,0x00,0x8E,0x58,0x4A,0x5D,0xE4],
+            [0x85,0x04,0xFA,0x9D,0x1B,0xB6,0xC7,0xAC,0x25,0x2E,0x72,0xC2,0x02,0xFD,0xCE,0x0D],
+            [0x5B,0xE3,0xD6,0x12,0x17,0xB9,0x61,0x81,0xFE,0x67,0x86,0xAD,0x71,0x6B,0x89,0x0B],
+            [0x5C,0xB0,0xC0,0xFF,0x33,0xC3,0x56,0xB8,0x35,0xC4,0x05,0xAE,0xD8,0xE0,0x7F,0x99],
+            [0xE1,0x2B,0xDC,0x1A,0xE2,0x82,0x57,0xEC,0x70,0x3F,0xCC,0xF0,0x95,0xEE,0x8D,0xF1],
+            [0xC1,0xAB,0x76,0x38,0x9F,0xE6,0x78,0xCA,0xF7,0xC6,0xF8,0x60,0xD5,0xBB,0x9C,0x4F],
+            [0xF3,0x3C,0x65,0x7B,0x63,0x7C,0x30,0x6A,0xDD,0x4E,0xA7,0x79,0x9E,0xB2,0x3D,0x31],
+            [0x3E,0x98,0xB5,0x6E,0x27,0xD3,0xBC,0xCF,0x59,0x1E,0x18,0x1F,0x4C,0x5A,0xB7,0x93],
+            [0xE9,0xDE,0xE7,0x2C,0x8F,0x0C,0x0F,0xA6,0x2D,0xDB,0x49,0xF4,0x6F,0x73,0x96,0x47],
+            [0x06,0x07,0x53,0x16,0xED,0x24,0x7A,0x37,0x39,0xCB,0xA3,0x83,0x03,0xA9,0x8B,0xF6],
+            [0x92,0xBD,0x9B,0x1C,0xE5,0xD1,0x41,0x01,0x54,0x45,0xFB,0xC9,0x5E,0x4D,0x0E,0xF2],
+            [0x68,0x20,0x80,0xAA,0x22,0x7D,0x64,0x2F,0x26,0x87,0xF9,0x34,0x90,0x40,0x55,0x11],
+            [0xBE,0x32,0x97,0x13,0x43,0xFC,0x9A,0x48,0xA0,0x2A,0x88,0x5F,0x19,0x4B,0x09,0xA1],
+            [0x7E,0xCD,0xA4,0xD0,0x15,0x44,0xAF,0x8C,0xA5,0x84,0x50,0xBF,0x66,0xD2,0xE8,0x8A],
+            [0xA2,0xD7,0x46,0x52,0x42,0xA8,0xDF,0xB3,0x69,0x74,0xC5,0x51,0xEB,0x23,0x29,0x21],
+            [0xD4,0xEF,0xD9,0xB4,0x3A,0x62,0x28,0x75,0x91,0x14,0x10,0xEA,0x77,0x6C,0xDA,0x1D]]
+    return array[(number&0xF0) >> 4][number&0xF]
+
+def Gtransform(number,shifted):
+    a = replace((number & 0xFF000000) >> 24)  # (number >> 24) && 0x000000FF 
+    b = replace((number & 0x00FF0000) >> 16)
+    c = replace((number & 0x0000FF00) >> 8)
+    d = replace(number & 0x000000FF)
+    
+    replaced = (a << 24) | (b << 16) | (c << 8) | d
+    return shift(replaced,shifted)
+
+def convertEndian(number):
+    a = (number & 0xFF000000) >> 24  # (number >> 24) && 0x000000FF 
+    b = (number & 0x00FF0000) >> 16
+    c = (number & 0x0000FF00) >> 8
+    d = (number & 0x000000FF)
+    [a,b,c,d] = [d,c,b,a]
+    return (a << 24) | (b << 16) | (c << 8) | d
 
 
-#
-# inner function for byte replacement
-#
-#
-    def __replace__(byte):
-        x = byte[0]
-        y = byte[1]
-        array = [["B1","94","BA","C8","0A","08","F5","3B","36","6D","00","8E","58","4A","5D","E4"],
-				 ["85","04","FA","9D","1B","B6","C7","AC","25","2E","72","C2","02","FD","CE","0D"],
-				 ["5B","E3","D6","12","17","B9","61","81","FE","67","86","AD","71","6B","89","0B"],
-				 ["5C","B0","C0","FF","33","C3","56","B8","35","C4","05","AE","D8","E0","7F","99"],
-				 ["E1","2B","DC","1A","E2","82","57","EC","70","3F","CC","F0","95","EE","8D","F1"],
-				 ["C1","AB","76","38","9F","E6","78","CA","F7","C6","F8","60","D5","BB","9C","4F"],
-				 ["F3","3C","65","7B","63","7C","30","6A","DD","4E","A7","79","9E","B2","3D","31"],
-				 ["3E","98","B5","6E","27","D3","BC","CF","59","1E","18","1F","4C","5A","B7","93"],
-				 ["E9","DE","E7","2C","8F","0C","0F","A6","2D","DB","49","F4","6F","73","96","47"],
-				 ["06","07","53","16","ED","24","7A","37","39","CB","A3","83","03","A9","8B","F6"],
-				 ["92","BD","9B","1C","E5","D1","41","01","54","45","FB","C9","5E","4D","0E","F2"],
-				 ["68","20","80","AA","22","7D","64","2F","26","87","F9","34","90","40","55","11"],
-				 ["BE","32","97","13","43","FC","9A","48","A0","2A","88","5F","19","4B","09","A1"],
-				 ["7E","CD","A4","D0","15","44","AF","8C","A5","84","50","BF","66","D2","E8","8A"],
-				 ["A2","D7","46","52","42","A8","DF","B3","69","74","C5","51","EB","23","29","21"],
- 				 ["D4","EF","D9","B4","3A","62","28","75","91","14","10","EA","77","6C","DA","1D"]]
-        return array[int(x,16)][int(y,16)]
+def splitHexInput(input,length):
+    mask = 2**32-1
+    array = [(input >> 32*i) & mask  for i in range(length-1,-1,-1)]
+    return array
 
-    def __rotate__(word,shift):
-        print(word)
-        block_size = 2
-        count = len(word)/block_size
-        [a,b,c,d] = [word[i:i+block_size] for i in range(0,len(word),block_size)]
-        a = BeltBlock.__replace__(a)
-        b = BeltBlock.__replace__(b)
-        c = BeltBlock.__replace__(c)
-        d = BeltBlock.__replace__(d)
-        replaced = a + b + c + d
-        arr = list(replaced)
-        print(arr)
-        arr = arr[1:len(arr)-shift] + arr[len(arr)-shift+1:len(arr)]
-        print(arr)
-        return replaced
-		
+def encode(input,key):
+    inputs = splitHexInput(input,4)
+    keys = splitHexInput(key,8)
+    [a,b,c,d] = [convertEndian(el)  for el in inputs]
+    ke_arr = [convertEndian(el)  for el in keys]
+    for i in range(1,9):
+        b = b ^ Gtransform(addMod32(a,ke_arr[(7*i-7)%8]),5)
+        c = c ^ Gtransform(addMod32(d,ke_arr[(7*i-6)%8]),21)
+        a = subMod32(a,Gtransform(addMod32(b,ke_arr[(7*i-5)%8]),13))
+        e = Gtransform(addMod32(addMod32(b,c),ke_arr[(7*i-4)%8]),21) ^ i
+        b = addMod32(b,e)
+        c = subMod32(c,e)
+        d = addMod32(d,Gtransform(addMod32(c,ke_arr[(7*i-3)%8]),13))
+        b = b ^ Gtransform(addMod32(a,ke_arr[(7*i-2)%8]),21)
+        c = c ^ Gtransform(addMod32(d,ke_arr[(7*i-1)%8]),5)
+        [a,b] = [b,a]
+        [c,d] = [d,c]
+        [b,c] = [c,b]
+    return (b << 96) | (d << 64) | (a << 32) | c
+
+def decode(input,key):
+    inputs = splitHexInput(input,4)
+    keys = splitHexInput(key,8)
+    [a,b,c,d] = [convertEndian(el)  for el in inputs]
+    ke_arr = [convertEndian(el)  for el in keys]
+    for i in range(8,0,-1):
+        b = b ^ Gtransform(addMod32(a,ke_arr[(7*i-1)%8]),5)
+        c = c ^ Gtransform(addMod32(d,ke_arr[(7*i-2)%8]),21)
+        a = subMod32(a,Gtransform(addMod32(b,ke_arr[(7*i-3)%8]),13))
+        e = Gtransform(addMod32(addMod32(b,c),ke_arr[(7*i-4)%8]),21) ^ i
+        b = addMod32(b,e)
+        c = subMod32(c,e)
+        d = addMod32(d,Gtransform(addMod32(c,ke_arr[(7*i-5)%8]),13))
+        b = b ^ Gtransform(addMod32(a,ke_arr[(7*i-6)%8]),21)
+        c = c ^ Gtransform(addMod32(d,ke_arr[(7*i-7)%8]),5)
+        [a,b] = [b,a]
+        [c,d] = [d,c]
+        [a,d] = [d,a]
+    return (c << 96) | (a << 64) | (d << 32) | b
+
+def main():
+    a = encode(0xB194BAC80A08F53B366D008E584A5DE4,0xE9DEE72C8F0C0FA62DDB49F46F73964706075316ED247A3739CBA38303A98BF6)
+    print(hex(a))
+    b = decode(0xE12BDC1AE28257EC703FCCF095EE8DF1,0x92BD9B1CE5D141015445FBC95E4D0EF2682080AA227D642F2687F93490405511)
+    print(hex(b))
+
+main()
