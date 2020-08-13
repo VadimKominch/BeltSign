@@ -2,8 +2,8 @@ import math
 
 def shift(value,number):
     digits = 32
-    b = (value << number | value >> (digits - number)) & (math.floor(math.pow(2,digits))-1)
-    print(b)
+    return (value << number | value >> (digits - number)) & (math.floor(math.pow(2,digits))-1)
+    
 
 def addMod32(number1,number2):
     mask = 2**32-1
@@ -32,9 +32,14 @@ def replace(number):
             [0xD4,0xEF,0xD9,0xB4,0x3A,0x62,0x28,0x75,0x91,0x14,0x10,0xEA,0x77,0x6C,0xDA,0x1D]]
     return array[(number&0xF0) >> 4][number&0xF]
 
-def Gtransform(number,shift):
-    replaced = replace(number)
-    return shift(replaced,shift)
+def Gtransform(number,shifted):
+    a = replace((number & 0xFF000000) >> 24)  # (number >> 24) && 0x000000FF 
+    b = replace((number & 0x00FF0000) >> 16)
+    c = replace((number & 0x0000FF00) >> 8)
+    d = replace(number & 0x000000FF)
+    
+    replaced = (a << 24) | (b << 16) | (c << 8) | d
+    return shift(replaced,shifted)
 
 def convertEndian(number):
     a = (number & 0xFF000000) >> 24  # (number >> 24) && 0x000000FF 
@@ -56,22 +61,21 @@ def beltBlock(input,key):
     [a,b,c,d] = [convertEndian(el)  for el in inputs]
     ke_arr = [convertEndian(el)  for el in keys]
     for i in range(1,9):
-        b = b ^ Gtransform(addMod32(a,ke_arr[1]),5) 
-        c = c ^ Gtransform(addMod32(d,ke_arr[2]),21)
-        a = a ^ Gtransform(addMod32(b,ke_arr[3]),13)
-        e = Gtransform(number,13) + i
+        b = b ^ Gtransform(addMod32(a,ke_arr[(7*i-7)%8]),5)
+        c = c ^ Gtransform(addMod32(d,ke_arr[(7*i-6)%8]),21)
+        a = subMod32(a,Gtransform(addMod32(b,ke_arr[(7*i-5)%8]),13))
+        e = Gtransform(addMod32(addMod32(b,c),ke_arr[(7*i-4)%8]),21) ^ i
         b = addMod32(b,e)
         c = subMod32(c,e)
-        d = d + 0
-        b = b ^ 0
-        c = c ^ 0
+        d = addMod32(d,Gtransform(addMod32(c,ke_arr[(7*i-3)%8]),13))
+        b = b ^ Gtransform(addMod32(a,ke_arr[(7*i-2)%8]),21)
+        c = c ^ Gtransform(addMod32(d,ke_arr[(7*i-1)%8]),5)
         [a,b] = [b,a]
         [c,d] = [d,c]
         [b,c] = [c,b]
-    return 0
+    return (b << 96) | (d << 64) | (a << 32) | c
 
 def main():
-    print(hex(subMod32(1,4)))
-    arr = splitHexInput(0xB194BAC80A08F53B366D008E584A5DE4,4)
-    #beltBlock(0xB194BAC80A08F53B366D008E584A5DE4,0xB194BAC80A08F53B366D008E584A5DE4)
+    a = beltBlock(0xB194BAC80A08F53B366D008E584A5DE4,0xE9DEE72C8F0C0FA62DDB49F46F73964706075316ED247A3739CBA38303A98BF6)
+    print(hex(a))
 main()
